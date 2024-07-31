@@ -1,0 +1,40 @@
+steps:
+  - id: build-app-image
+    name: 'gcr.io/kaniko-project/executor:latest'
+    args:
+      - --dockerfile=${_APP_DOCKER_FILE}
+      - --destination=gcr.io/${PROJECT_ID}/${_APP_NAME}-${_ENV}${_ENV_VARIANT}:latest
+      - --destination=gcr.io/${PROJECT_ID}/${_APP_NAME}-${_ENV}${_ENV_VARIANT}:$TAG_NAME
+      - --cache=true
+      - --cache-ttl=336h
+      - --compressed-caching=false
+      - --build-arg=APP_NAME=${_APP_NAME}
+  - id: deploy-app
+    name: gcr.io/cloud-builders/gcloud
+    waitFor: [build-app-image]
+    entrypoint: bash
+    args:
+      - -c
+      - |
+        gcloud run deploy ${_APP_NAME}-${_ENV}${_ENV_VARIANT} \
+          --platform=managed \
+          --region=${_REGION} \
+          --no-allow-unauthenticated \
+          --service-account=${_APP_SERVICE_ACCOUNT} \
+          --timeout=900 \
+          --memory=1G \
+          --image=gcr.io/${PROJECT_ID}/${_APP_NAME}-${_ENV}${_ENV_VARIANT}:latest \
+          --add-cloudsql-instances=${PROJECT_ID}:${_REGION}:${_APP_NAME}-${_ENV} \
+substitutions:
+  # _APP_NAME: smaku
+  # _ENV: preview
+  # _ENV_VARIANT: -1
+  # _APP_SERVICE_ACCOUNT: smaku-preview-run@smaku-next.iam.gserviceaccount.com
+  _APP_DOCKER_FILE: ./cicd/release/Dockerfile
+  _REGION: asia-northeast1
+timeout: 900s
+options:
+  logging: CLOUD_LOGGING_ONLY
+  dynamicSubstitutions: true
+  substitutionOption: MUST_MATCH
+  machineType: E2_HIGHCPU_32

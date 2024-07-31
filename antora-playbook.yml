@@ -6,7 +6,7 @@ site:
 content:
   sources:
   - url: https://github.com/azoom-taiga-sato/antora-db-doc.git
-    tags: v1.*
+    tags: v1*
     branches: ~
     # branches: [main]
     # tags: 0.*

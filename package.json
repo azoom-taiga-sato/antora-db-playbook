@@ -1,4 +1,7 @@
 {
+  "scripts": {
+    "antora-playbook": "npx antora --fetch antora-playbook.yml"
+  },
   "devDependencies": {
     "antora": "3.1.9"
   }
